@@ -1,0 +1,61 @@
+{
+  "name": "SNAKTRIS Agent",
+  "description": "High-performance AI Agent specialized in snake-tetris hybrid mechanics, real-time automation, competitive optimization and ecosystem coordination on Base.",
+  "version": "1.0.0",
+  "type": "https://eips.ethereum.org/EIPS/eip-8004#registration-v1",
+  "image": "https://res.cloudinary.com/demo/image/upload/v1312461204/sample.jpg",
+  "owner": "0x0000000000000000000000000000000000000000",
+  "agentWallet": "0x0000000000000000000000000000000000000000",
+  "active": true,
+  "skills": [
+    {
+      "id": "snaktris-mechanics",
+      "name": "Snaktris Mechanics",
+      "description": "Real-time snake and tetris hybrid mechanics, speed optimization and competitive block management."
+    },
+    {
+      "id": "multi-track-orchestration",
+      "name": "Multi-Track Orchestration",
+      "description": "Manage and synchronize multiple playing instances and leaderboards simultaneously."
+    },
+    {
+      "id": "performance-optimization",
+      "name": "Performance Optimization",
+      "description": "Analyze and optimize gaming performance, timing and strategy in real-time."
+    }
+  ],
+  "services": [
+    {
+      "name": "A2A",
+      "version": "1.0.0",
+      "endpoint": "/.well-known/agent-card.json"
+    },
+    {
+      "name": "MCP",
+      "version": "1.0.0",
+      "endpoint": "/api/mcp"
+    },
+    {
+      "name": "API",
+      "version": "1.0.0",
+      "endpoint": "/api/agent"
+    }
+  ],
+  "capabilities": [
+    "snaktris-mechanics",
+    "real-time-automation",
+    "multi-track-management",
+    "speed-optimization",
+    "competitive-orchestration",
+    "ecosystem-coordination"
+  ],
+  "supportedChains": ["eip155:8453"],
+  "x402Support": false,
+  "registrations": [
+    {
+      "agentId": null,
+      "agentRegistry": "eip155:8453:0x8004A169FB4a3325136EB29fA0ceB6D2e539a432"
+    }
+  ],
+  "supportedTrust": ["reputation"]
+}
