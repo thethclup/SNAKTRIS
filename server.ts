@@ -41,6 +41,30 @@ async function startServer() {
     }
   );
 
+  mcp.prompt(
+    "snaktris_status",
+    "Provides instructions to get the status of the Snaktris game",
+    {},
+    () => ({
+      messages: [{
+        role: "user",
+        content: { type: "text", text: "Check Snaktris leaderboard and active runs." }
+      }]
+    })
+  );
+
+  mcp.resource(
+    "snaktris_stats",
+    "snaktris://stats",
+    { description: "Global Snaktris stats" },
+    async (uri) => ({
+      contents: [{
+        uri: uri.href,
+        text: JSON.stringify({ totalHits: 104200, activePlayers: 12 }),
+      }]
+    })
+  );
+
   // MCP SSE Endpoints
   let transport: SSEServerTransport;
   
@@ -65,6 +89,10 @@ async function startServer() {
     });
   });
 
+  app.get("/.well-known/agent-card.json", (req, res) => {
+    res.sendFile(path.join(process.cwd(), "public", ".well-known", "agent-card.json"));
+  });
+
   // Vite middleware for development
   if (process.env.NODE_ENV !== "production") {
     const vite = await createViteServer({
@@ -78,7 +106,7 @@ async function startServer() {
     app.use(express.static(distPath));
     app.use(express.static(path.join(process.cwd(), 'public')));
     
-    app.get('*all', (req, res) => {
+    app.get('*', (req, res) => {
       res.sendFile(path.join(distPath, 'index.html'));
     });
   }
