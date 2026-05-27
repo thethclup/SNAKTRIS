@@ -1,5 +1,7 @@
 import { NextResponse } from 'next/server';
 
+export const dynamic = 'force-dynamic';
+
 export async function GET() {
   return NextResponse.json({ status: "MCP server is active", version: "1.0.0" }, {
     headers: { "Access-Control-Allow-Origin": "*" }
