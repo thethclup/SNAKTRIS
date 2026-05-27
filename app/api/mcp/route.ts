@@ -24,11 +24,31 @@ export async function POST(req: Request) {
     } else if (method === "tools/list") {
       result = {
         tools: [
-          { name: "get_race_status", description: "Get the current status of the race" },
-          { name: "start_race", description: "Start a new race" },
-          { name: "get_leaderboard", description: "Gets the current highest score in the Snaktris game" },
-          { name: "optimize_speed", description: "Optimize the speed of the snake/racer" },
-          { name: "get_track_info", description: "Get information about the current track" }
+          { 
+            name: "get_race_status", 
+            description: "Get the current status of the race",
+            inputSchema: { type: "object", properties: {} }
+          },
+          { 
+            name: "start_race", 
+            description: "Start a new race",
+            inputSchema: { type: "object", properties: {} }
+          },
+          { 
+            name: "get_leaderboard", 
+            description: "Gets the current highest score in the Snaktris game",
+            inputSchema: { type: "object", properties: { limit: { type: "number" } } }
+          },
+          { 
+            name: "optimize_speed", 
+            description: "Optimize the speed of the snake/racer",
+            inputSchema: { type: "object", properties: {} }
+          },
+          { 
+            name: "get_track_info", 
+            description: "Get information about the current track",
+            inputSchema: { type: "object", properties: {} }
+          }
         ]
       };
     } else if (method === "tools/call") {

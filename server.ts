@@ -65,27 +65,100 @@ async function startServer() {
     })
   );
 
-  // MCP SSE Endpoints
-  let transport: SSEServerTransport;
-  
-  app.get("/api/mcp", async (req, res) => {
-     transport = new SSEServerTransport("/api/mcp/message", res);
-     await mcp.connect(transport);
+  app.post("/api/mcp", express.json(), async (req, res) => {
+    try {
+      const { method, params, id } = req.body;
+      let result = null;
+      
+      if (method === "initialize") {
+        result = {
+          protocolVersion: "2024-11-05",
+          capabilities: {},
+          serverInfo: {
+            name: "Snaktris MCP Server",
+            version: "1.0.0"
+          }
+        };
+      } else if (method === "tools/list") {
+        result = {
+          tools: [
+            { 
+              name: "get_race_status", 
+              description: "Get the current status of the race",
+              inputSchema: { type: "object", properties: {} }
+            },
+            { 
+              name: "start_race", 
+              description: "Start a new race",
+              inputSchema: { type: "object", properties: {} }
+            },
+            { 
+              name: "get_leaderboard", 
+              description: "Gets the current highest score in the Snaktris game",
+              inputSchema: { type: "object", properties: { limit: { type: "number" } } }
+            },
+            { 
+              name: "optimize_speed", 
+              description: "Optimize the speed of the snake/racer",
+              inputSchema: { type: "object", properties: {} }
+            },
+            { 
+              name: "get_track_info", 
+              description: "Get information about the current track",
+              inputSchema: { type: "object", properties: {} }
+            }
+          ]
+        };
+      } else if (method === "tools/call") {
+        const toolName = params.name;
+        if (toolName === "get_leaderboard") {
+          result = {
+            content: [{ type: "text", text: JSON.stringify([{ name: 'vitalik.base.eth', score: 942000 }]) }]
+          };
+        } else {
+          result = {
+            content: [{ type: "text", text: `Mocked result for ${toolName}` }]
+          };
+        }
+      } else if (method === "prompts/list") {
+        result = { prompts: [] };
+      } else if (method === "resources/list") {
+        result = { resources: [] };
+      } else {
+        return res.status(404).json({ error: { code: -32601, message: "Method not found" } });
+      }
+
+      res.json({
+        jsonrpc: "2.0",
+        id,
+        result
+      });
+    } catch (error) {
+      res.status(400).json({ error: "Invalid JSON" });
+    }
   });
 
-  app.post("/api/mcp/message", express.json(), async (req, res) => {
-     if (transport) {
-       await transport.handlePostMessage(req, res);
-     } else {
-       res.status(500).send("Transport not initialized");
-     }
+  app.get("/api/mcp", (req, res) => {
+    res.json({ status: "MCP server is active", version: "1.0.0" });
   });
 
   // Agent API Endpoint
   app.get("/api/agent", (req, res) => {
     res.json({
       status: "active",
-      message: "Snaktris AI Agent is running"
+      name: "SNAKTRIS Agent",
+      message: "Snaktris AI Agent is running",
+      version: "1.0.0" 
+    });
+  });
+
+  app.post("/api/agent", express.json(), (req, res) => {
+    res.json({ 
+      success: true,
+      received: req.body,
+      name: "SNAKTRIS Agent",
+      status: "processed",
+      version: "1.0.0"
     });
   });
 
