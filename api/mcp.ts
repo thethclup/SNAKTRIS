@@ -1,10 +1,6 @@
-import { NextResponse } from 'next/server';
-
-export async function GET() {
-  return NextResponse.json({ status: "MCP server is active", version: "1.0.0" }, {
-    headers: { "Access-Control-Allow-Origin": "*" }
-  });
-}
+export const config = {
+  runtime: 'edge',
+};
 
 async function handleMcpRequest(reqBody: any) {
   const { method, params, id } = reqBody;
@@ -77,48 +73,65 @@ async function handleMcpRequest(reqBody: any) {
   };
 }
 
-export async function POST(req: Request) {
-  try {
-    const body = await req.json();
-    
-    // Handle JSON-RPC batch requests
-    let responseBody;
-    if (Array.isArray(body)) {
-      responseBody = [];
-      for (const reqBody of body) {
-        try {
-          responseBody.push(await handleMcpRequest(reqBody));
-        } catch (e) {
-          responseBody.push({ jsonrpc: "2.0", id: reqBody.id, error: { code: -32601, message: "Method not found" } });
-        }
-      }
-    } else {
-      try {
-        responseBody = await handleMcpRequest(body);
-      } catch (e) {
-        responseBody = { jsonrpc: "2.0", id: body.id, error: { code: -32601, message: "Method not found" } };
-      }
-    }
-
-    return NextResponse.json(responseBody, {
+export default async function handler(req: Request) {
+  if (req.method === 'OPTIONS') {
+    return new Response(null, {
+      status: 204,
       headers: {
         "Access-Control-Allow-Origin": "*",
         "Access-Control-Allow-Methods": "POST, GET, OPTIONS",
         "Access-Control-Allow-Headers": "Content-Type",
       }
     });
-  } catch (error) {
-    return NextResponse.json({ error: "Invalid JSON or internal error" }, { status: 400 });
   }
-}
 
-export async function OPTIONS() {
-  return new NextResponse(null, {
-    status: 204,
-    headers: {
-      "Access-Control-Allow-Origin": "*",
-      "Access-Control-Allow-Methods": "POST, GET, OPTIONS",
-      "Access-Control-Allow-Headers": "Content-Type",
+  if (req.method === 'GET') {
+    return new Response(JSON.stringify({ status: "MCP server is active", version: "1.0.0" }), {
+      headers: { 
+        "Content-Type": "application/json",
+        "Access-Control-Allow-Origin": "*" 
+      }
+    });
+  }
+
+  if (req.method === 'POST') {
+    try {
+      const body = await req.json();
+      
+      // Handle JSON-RPC batch requests
+      let responseBody;
+      if (Array.isArray(body)) {
+        responseBody = [];
+        for (const reqBody of body) {
+          try {
+            responseBody.push(await handleMcpRequest(reqBody));
+          } catch (e) {
+            responseBody.push({ jsonrpc: "2.0", id: reqBody.id, error: { code: -32601, message: "Method not found" } });
+          }
+        }
+      } else {
+        try {
+          responseBody = await handleMcpRequest(body);
+        } catch (e) {
+          responseBody = { jsonrpc: "2.0", id: body.id, error: { code: -32601, message: "Method not found" } };
+        }
+      }
+
+      return new Response(JSON.stringify(responseBody), {
+        headers: {
+          "Content-Type": "application/json",
+          "Access-Control-Allow-Origin": "*",
+          "Access-Control-Allow-Methods": "POST, GET, OPTIONS",
+          "Access-Control-Allow-Headers": "Content-Type",
+        }
+      });
+    } catch (error) {
+      return new Response(JSON.stringify({ error: "Invalid JSON or internal error" }), { 
+        status: 400,
+        headers: { "Content-Type": "application/json" }
+      });
     }
-  });
+  }
+
+  return new Response("Method not allowed", { status: 405 });
 }
