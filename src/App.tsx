@@ -1,23 +1,38 @@
 import React, { useEffect, useRef } from 'react';
-import { Web3Provider } from './components/Web3Provider';
 import { useGameEngine } from './game/engine';
 import { COLS, ROWS, COLORS, SHAPES } from './game/constants';
-import { useAccount, useSendTransaction, useConnect, useDisconnect } from 'wagmi';
+import { useAccount, useSendTransaction, useConnect, useDisconnect, useSendCalls } from 'wagmi';
+import { parseAbi, encodeFunctionData } from 'viem';
 import { injected } from 'wagmi/connectors';
 import { Sun } from 'lucide-react';
 
-function GameInterface() {
+export default function App() {
   const { grid, piece, food, gameState, snakeLength, combo, nextPiece, startGame, movePiece } = useGameEngine();
   const { isConnected, address } = useAccount();
   const { connect } = useConnect();
   const { disconnect } = useDisconnect();
-  const { sendTransaction } = useSendTransaction();
+  const { sendTransactionAsync } = useSendTransaction();
+  const { sendCallsAsync } = useSendCalls();
 
-  const sendGMTransaction = () => {
-    sendTransaction({
-      to: '0xcD0dd3716C5561De47a24949335dF8a8CD8F71a3',
-      data: '0x', // basic transaction
-    });
+  const sendGMTransaction = async () => {
+    try {
+      const gmAbi = parseAbi(['function gm()']);
+      const calldata = encodeFunctionData({ abi: gmAbi, functionName: 'gm' });
+      
+      await sendCallsAsync({
+        calls: [{
+          to: '0xcD0dd3716C5561De47a24949335dF8a8CD8F71a3',
+          data: calldata
+        }]
+      });
+    } catch (e) {
+      const gmAbi = parseAbi(['function gm()']);
+      const calldata = encodeFunctionData({ abi: gmAbi, functionName: 'gm' });
+      await sendTransactionAsync({
+        to: '0xcD0dd3716C5561De47a24949335dF8a8CD8F71a3',
+        data: calldata,
+      });
+    }
   };
 
   // Keyboard controls
@@ -72,7 +87,7 @@ function GameInterface() {
       <header className="flex flex-col sm:flex-row justify-between items-start sm:items-end mb-4 sm:mb-8 border-b border-[#333] pb-4 shrink-0">
         <div className="flex flex-col mb-4 sm:mb-0">
           <div className="flex items-center gap-4 mb-2">
-            <span className="text-[10px] tracking-[0.3em] uppercase opacity-50">On-Chain Protocol: Base Mainnet</span>
+            <span className="text-[10px] tracking-[0.3em] uppercase opacity-50">Onchain Protocol: Base Mainnet</span>
             {!isConnected ? (
               <button 
                 onClick={() => connect({ connector: injected() })}
@@ -162,7 +177,7 @@ function GameInterface() {
             <button 
               onClick={() => { alert('Transaction simulated! (Requires full wallet configuration in production)'); }}
               className="w-full bg-[#00FFFF] text-black font-black py-4 uppercase tracking-widest hover:bg-white transition-colors">
-              RECORD ON-CHAIN
+              RECORD ONCHAIN
             </button>
           </div>
         </aside>
@@ -279,7 +294,7 @@ function GameInterface() {
               <button 
                  onClick={() => { alert('Transaction simulated!'); }}
                  className="w-full bg-[#00FFFF] text-black font-black py-4 uppercase tracking-widest hover:bg-white transition-colors">
-                RECORD ON-CHAIN
+                RECORD ONCHAIN
               </button>
             </div>
           </div>
@@ -307,13 +322,5 @@ function GameInterface() {
         </div>
       </footer>
     </div>
-  );
-}
-
-export default function App() {
-  return (
-    <Web3Provider>
-      <GameInterface />
-    </Web3Provider>
   );
 }

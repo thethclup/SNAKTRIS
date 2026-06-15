@@ -3,6 +3,7 @@ import { createConfig, http, WagmiProvider } from 'wagmi';
 import { base } from 'wagmi/chains';
 import { injected } from 'wagmi/connectors';
 import React, { ReactNode } from 'react';
+import { Attribution } from 'ox/erc8021';
 
 const queryClient = new QueryClient();
 
@@ -12,9 +13,10 @@ export const wagmiConfig = createConfig({
   transports: {
     [base.id]: http(),
   },
-});
+  dataSuffix: Attribution.toDataSuffix({ codes: ["bc_ktc2jlrn"] }),
+} as any);
 
-export function Web3Provider({ children }: { children: ReactNode }) {
+export function OnchainProvider({ children }: { children: ReactNode }) {
   return (
     <WagmiProvider config={wagmiConfig}>
       <QueryClientProvider client={queryClient}>

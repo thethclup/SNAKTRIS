@@ -1,6 +1,6 @@
 /**
  * ERC-8004: Trustless Agents
- * Defines standard interfaces for agentic interactions and autonomous on-chain actions.
+ * Defines standard interfaces for agentic interactions and autonomous onchain actions.
  * Placeholder for future Snaktris Agent extensions (e.g. auto-playing agents).
  */
 
