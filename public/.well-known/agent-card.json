@@ -47,7 +47,8 @@
     "multi-track-management",
     "speed-optimization",
     "competitive-orchestration",
-    "ecosystem-coordination"
+    "ecosystem-coordination",
+    "base-denim-200ms-execution"
   ],
   "supportedChains": ["eip155:8453"],
   "x402Support": false,

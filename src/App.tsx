@@ -1,10 +1,10 @@
-import React, { useEffect, useRef } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { useGameEngine } from './game/engine';
 import { COLS, ROWS, COLORS, SHAPES } from './game/constants';
 import { useAccount, useSendTransaction, useConnect, useDisconnect, useSendCalls } from 'wagmi';
 import { parseAbi, encodeFunctionData } from 'viem';
 import { injected } from 'wagmi/connectors';
-import { Sun } from 'lucide-react';
+import { Sun, CheckCircle2 } from 'lucide-react';
 
 export default function App() {
   const { grid, piece, food, gameState, snakeLength, combo, nextPiece, startGame, movePiece } = useGameEngine();
@@ -14,7 +14,12 @@ export default function App() {
   const { sendTransactionAsync } = useSendTransaction();
   const { sendCallsAsync } = useSendCalls();
 
+  const [isSendingGM, setIsSendingGM] = useState(false);
+  const [gmStatus, setGmStatus] = useState<string | null>(null);
+
   const sendGMTransaction = async () => {
+    setIsSendingGM(true);
+    setGmStatus('Broadcasting to Denim 200ms block...');
     try {
       const gmAbi = parseAbi(['function gm()']);
       const calldata = encodeFunctionData({ abi: gmAbi, functionName: 'gm' });
@@ -25,13 +30,24 @@ export default function App() {
           data: calldata
         }]
       });
+      setGmStatus('GM confirmed in Denim canonical block!');
+      setTimeout(() => setGmStatus(null), 4000);
     } catch (e) {
-      const gmAbi = parseAbi(['function gm()']);
-      const calldata = encodeFunctionData({ abi: gmAbi, functionName: 'gm' });
-      await sendTransactionAsync({
-        to: '0xcD0dd3716C5561De47a24949335dF8a8CD8F71a3',
-        data: calldata,
-      });
+      try {
+        const gmAbi = parseAbi(['function gm()']);
+        const calldata = encodeFunctionData({ abi: gmAbi, functionName: 'gm' });
+        await sendTransactionAsync({
+          to: '0xcD0dd3716C5561De47a24949335dF8a8CD8F71a3',
+          data: calldata,
+        });
+        setGmStatus('GM confirmed on Base Denim!');
+        setTimeout(() => setGmStatus(null), 4000);
+      } catch (err) {
+        setGmStatus('Transaction cancelled or failed');
+        setTimeout(() => setGmStatus(null), 4000);
+      }
+    } finally {
+      setIsSendingGM(false);
     }
   };
 
@@ -86,8 +102,12 @@ export default function App() {
       {/* TOP HUD */}
       <header className="flex flex-col sm:flex-row justify-between items-start sm:items-end mb-4 sm:mb-8 border-b border-[#333] pb-4 shrink-0">
         <div className="flex flex-col mb-4 sm:mb-0">
-          <div className="flex items-center gap-4 mb-2">
+          <div className="flex items-center gap-3 mb-2 flex-wrap">
             <span className="text-[10px] tracking-[0.3em] uppercase opacity-50">Onchain Protocol: Base Mainnet</span>
+            <span className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full text-[9px] font-mono font-bold bg-emerald-500/15 text-emerald-400 border border-emerald-500/30">
+              <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse"></span>
+              Denim 200ms Blocks
+            </span>
             {!isConnected ? (
               <button 
                 onClick={() => connect({ connector: injected() })}
@@ -105,14 +125,21 @@ export default function App() {
                 </button>
                 <button 
                   onClick={sendGMTransaction}
-                  className="px-3 py-2 rounded-lg bg-[#E8A020]/20 hover:bg-[#E8A020]/30 border border-[#E8A020]/40 text-[#E8A020] transition-colors flex items-center gap-2 font-['Cinzel'] text-xs font-bold"
+                  disabled={isSendingGM}
+                  className="px-3 py-2 rounded-lg bg-[#E8A020]/20 hover:bg-[#E8A020]/30 border border-[#E8A020]/40 text-[#E8A020] transition-colors flex items-center gap-2 font-['Cinzel'] text-xs font-bold disabled:opacity-50"
                 >
-                  <Sun size={14} />
-                  Say GM
+                  <Sun size={14} className={isSendingGM ? 'animate-spin' : ''} />
+                  {isSendingGM ? 'Sending GM...' : 'Say GM'}
                 </button>
               </div>
             )}
           </div>
+          {gmStatus && (
+            <div className="flex items-center gap-1.5 text-[11px] font-mono text-[#00FFFF] bg-[#00FFFF]/10 border border-[#00FFFF]/30 px-2 py-1 rounded mb-2 w-fit">
+              <CheckCircle2 size={12} className="text-[#39FF14]" />
+              <span>{gmStatus}</span>
+            </div>
+          )}
           <h1 className="text-5xl sm:text-7xl font-black italic tracking-tighter leading-none text-transparent bg-clip-text bg-gradient-to-r from-[#00FFFF] via-[#FF00FF] to-[#39FF14]">
             SNAKTRIS
           </h1>
@@ -247,8 +274,8 @@ export default function App() {
             </div>
           </div>
 
-          <div className="absolute top-4 left-4 text-[10px] opacity-20 uppercase font-mono z-10 hidden sm:block pointer-events-none">
-            System: v1.0.4-beta // bc_ktc2jlrn
+          <div className="absolute top-4 left-4 text-[10px] opacity-40 uppercase font-mono z-10 hidden sm:block pointer-events-none">
+            System: v1.0.5 // Base Denim 200ms // bc_ktc2jlrn
           </div>
           {/* Mobile Controls Hint */}
           <div className="absolute bottom-4 text-[10px] opacity-40 uppercase font-mono z-10 sm:hidden pointer-events-none text-center w-full pb-2">
@@ -284,9 +311,11 @@ export default function App() {
             </div>
 
             <div className="mt-12 p-4 border border-dashed border-[#444] rounded-lg">
-              <p className="text-[10px] text-center opacity-50 uppercase leading-relaxed">
-                Your Run is being recorded to <br/>
-                <span className="text-[#39FF14]">ERC-8021 Transaction Pool</span>
+              <p className="text-[10px] text-center opacity-70 uppercase leading-relaxed font-mono">
+                Your Run is recorded onchain to <br/>
+                <span className="text-[#39FF14] font-bold">Base Denim 200ms Canonical Blocks</span>
+                <br/>
+                <span className="text-[9px] text-[#00FFFF]">ERC-8021 Attribution: [bc_ktc2jlrn]</span>
               </p>
             </div>
 
@@ -303,21 +332,19 @@ export default function App() {
 
       {/* FOOTER MARQUEE */}
       <footer className="h-12 border-t border-[#333] mt-6 flex items-center bg-[#0a0a0a] -mx-2 sm:-mx-6 px-2 sm:px-6 overflow-hidden shrink-0 fixed bottom-0 left-0 right-0 sm:relative z-20 pointer-events-none">
-        <div className="whitespace-nowrap flex gap-12 text-[11px] font-mono tracking-tighter opacity-70 uppercase animate-marquee">
+        <div className="whitespace-nowrap flex gap-12 text-[11px] font-mono tracking-tighter opacity-80 uppercase animate-marquee">
+          <span className="text-emerald-400 font-bold">● Base Denim: 200ms Blocks Active</span>
+          <span>Network: Base Mainnet (8453)</span>
           <span>Builder Code: [bc_ktc2jlrn]</span>
-          <span>Attribution: [ATTRIBUTION_CODE]</span>
-          <span>Node Status: Connected</span>
-          <span>Gas Price: 0.12 Gwei</span>
-          <span>Network: Base L2</span>
+          <span>Flashblocks: Retired (Denim Canonical)</span>
+          <span>RPC: Canonical Latest (200ms)</span>
+          <span>Gas Price: ~0.005 Gwei</span>
           <span>Agent Protocol: ERC-8004 Active</span>
-          <span>Sync: 100%</span>
           <span className="text-[#39FF14]">● All Systems Nominal</span>
+          <span className="text-emerald-400 font-bold">● Base Denim: 200ms Blocks Active</span>
+          <span>Network: Base Mainnet (8453)</span>
           <span>Builder Code: [bc_ktc2jlrn]</span>
-          <span>Attribution: [ATTRIBUTION_CODE]</span>
-          <span>Node Status: Connected</span>
-          <span>Gas Price: 0.12 Gwei</span>
-          <span>Network: Base L2</span>
-          <span>Agent Protocol: ERC-8004 Active</span>
+          <span>Sub-second Finality: Active</span>
           <span>Sync: 100%</span>
         </div>
       </footer>

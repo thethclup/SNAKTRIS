@@ -4,16 +4,36 @@ import { base } from 'wagmi/chains';
 import { injected } from 'wagmi/connectors';
 import React, { ReactNode } from 'react';
 import { Attribution } from 'ox/erc8021';
+import { BUILDER_CODE } from '../lib/erc8021';
 
-const queryClient = new QueryClient();
+// Base Mainnet with Denim Upgrade (200ms native canonical blocks)
+export const baseDenim = {
+  ...base,
+  name: 'Base Mainnet (Denim)',
+  rpcUrls: {
+    ...base.rpcUrls,
+    default: {
+      http: ['https://mainnet.base.org'],
+    },
+  },
+} as const;
+
+const queryClient = new QueryClient({
+  defaultOptions: {
+    queries: {
+      refetchInterval: 1000,
+    },
+  },
+});
 
 export const wagmiConfig = createConfig({
-  chains: [base],
+  chains: [baseDenim],
   connectors: [injected()],
   transports: {
-    [base.id]: http(),
+    [baseDenim.id]: http('https://mainnet.base.org'),
   },
-  dataSuffix: Attribution.toDataSuffix({ codes: ["bc_ktc2jlrn"] }),
+  pollingInterval: 1000,
+  dataSuffix: Attribution.toDataSuffix({ codes: [BUILDER_CODE] }),
 } as any);
 
 export function OnchainProvider({ children }: { children: ReactNode }) {
@@ -25,3 +45,4 @@ export function OnchainProvider({ children }: { children: ReactNode }) {
     </WagmiProvider>
   );
 }
+
